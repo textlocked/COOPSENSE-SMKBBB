@@ -58,7 +58,12 @@ enum ThresholdMode {
   MODE_FOLLOW_DISPLAY = 1,
   MODE_QTY_ONLY = 2
 };
-const ThresholdMode THRESHOLD_MODE = MODE_FOLLOW_DISPLAY; // <-- change here
+const ThresholdMode THRESHOLD_MODE = MODE_WEIGHT_ONLY; // <-- change here
+
+float qtyThresholdRstk = 15;
+float qtyThresholdLow = 40;
+float gramThresholdRstk = 500;
+float gramThresholdLow = 1500;
 
 // ---- Silence btn ----
 unsigned long lastSilenceDebounce = 0;
@@ -127,7 +132,7 @@ enum DisplayState {
   DISPLAY_TOTAL_WEIGHT = 2
 };
 
-DisplayState displayState = DISPLAY_TOTAL_WEIGHT;
+DisplayState displayState = DISPLAY_QUANTITY;
 
 // Temporary message screen
 unsigned long messageScreenUntil = 0;
@@ -140,8 +145,8 @@ BuzzerPhase buzzerPhase = BUZZ_IDLE;
 
 int beepsRemaining = 0;
 unsigned long lastBuzzerActionTime = 0;
-const unsigned long BEEP_ON_TIME = 150;
-const unsigned long BEEP_OFF_TIME = 150;
+const unsigned long BEEP_ON_TIME = 500;
+const unsigned long BEEP_OFF_TIME = 500;
 
 // ---- Weight read timing (decoupled from button polling) ----
 unsigned long lastWeightReadTime = 0;
@@ -180,7 +185,7 @@ void setup() {
   // ---- LCD ----
   lcd.begin(16, 2);
   lcd.setCursor(0, 0);
-  lcd.print("INVENTORY SYSTEM");
+  lcd.print("  COOPSENSE V1  ");
   lcd.setCursor(0, 1);
   lcd.print("  //  Boot  //  ");
 
@@ -233,7 +238,7 @@ void setup() {
 
   // Make physical LED match restored state.
   // HIGH = MUTED, LOW = UNMUTED (consistent with handleSilenceButton)
-  digitalWrite(LED_SILENCE, silenceState == MUTED ? HIGH : LOW);
+  digitalWrite(LED_SILENCE, silenceState == MUTED ? LOW : HIGH);
 
   Serial.print("Silence state: ");
   Serial.println(silenceState == MUTED ? "MUTED" : "UNMUTED");
@@ -300,13 +305,13 @@ StockState computeEffectiveState(float grams) {
   if (useQty) {
     float qty = grams / currentItemWeight;
 
-    if (qty <= 5.0)  return RESTOCK;
-    if (qty <= 12.0) return LOW_STOCK;
+    if (qty <= qtyThresholdRstk)  return RESTOCK;
+    if (qty <= qtyThresholdLow) return LOW_STOCK;
     return GOOD_STOCK;
   }
 
-  if (grams < 200.0)  return RESTOCK;
-  if (grams <= 1500.0) return LOW_STOCK;
+  if (grams < gramThresholdRstk)  return RESTOCK;
+  if (grams <= gramThresholdLow) return LOW_STOCK;
   return GOOD_STOCK;
 }
 
@@ -458,7 +463,7 @@ void handleSilenceButton() {
 
       prefs.putBool("silenceState", false);
 
-      digitalWrite(LED_SILENCE, LOW); // LOW = UNMUTED
+      digitalWrite(LED_SILENCE, HIGH); // HIGH = UNMUTED
 
       Serial.println("Buzzer UNMUTED.");
     }
@@ -467,7 +472,7 @@ void handleSilenceButton() {
 
       prefs.putBool("silenceState", true);
 
-      digitalWrite(LED_SILENCE, HIGH); // HIGH = MUTED
+      digitalWrite(LED_SILENCE, LOW); // LOW = MUTED
 
       // Immediately stop a buzzer that may currently be running,
       // including cancelling any in-progress non-blocking sequence.
@@ -899,7 +904,7 @@ void updateNormalLCD(float grams) {
   } else {
 
     lcd.setCursor(0, 0);
-    lcd.print("Total Weight:");
+    lcd.print("Total Weight:   ");
 
     lcd.setCursor(0, 1);
     lcd.print("                ");
