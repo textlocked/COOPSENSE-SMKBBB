@@ -1,5 +1,6 @@
 #include <HX711.h>
-#include <LiquidCrystal.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 #include <Preferences.h>
 
 // ---- HX711 pins ----
@@ -7,8 +8,11 @@
 #define HX711_SCK  19
 
 // ---- LCD pins (parallel, bare 1602) ----
-// LiquidCrystal(rs, enable, d4, d5, d6, d7)
-LiquidCrystal lcd(21, 22, 23, 32, 33, 14);
+// ---- I2C LCD ----
+#define LCD_SDA 33
+#define LCD_SCL 32
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // ---- RGB LED pins ----
 #define LED_G 27
@@ -183,7 +187,11 @@ void setup() {
   pinMode(REWEIGH_BTN, INPUT); // GPIO35 - external pull-down required
 
   // ---- LCD ----
-  lcd.begin(16, 2);
+  Wire.begin(LCD_SDA, LCD_SCL);
+
+  lcd.init();
+  lcd.backlight();
+
   lcd.setCursor(0, 0);
   lcd.print("  COOPSENSE V1  ");
   lcd.setCursor(0, 1);
