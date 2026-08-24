@@ -31,7 +31,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 #define PASSIVE_BUZZER false
 
 // ---- Calibration ----
-float calibration_factor = 460.0;
+float calibration_factor = 367.20;
 
 HX711 scale;
 Preferences prefs;
