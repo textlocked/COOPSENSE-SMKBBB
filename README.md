@@ -7,12 +7,12 @@ Additional boards manager URLs
 https://espressif.github.io/arduino-esp32/package_esp32_index.json
 
 ///
-/// LIBRARIES (asterisk - optional)
+/// LIBRARIES (asterisk means most likely built-in)
 ///
 - HX711 by Rob Tillaart
-- LiquidCrystal by Arduino, Adafruit*
-- Preferences by Volodymyr Shymanskyy*
-
+- LiquidCrystal I2C by Frank de Brabander
+- Preferences*
+- Wire*
 ///
 /// LIST OF ASSIGNED PINS
 ///
@@ -21,9 +21,9 @@ https://espressif.github.io/arduino-esp32/package_esp32_index.json
 - HX711_DT   18
 - HX711_SCK  19
 
----- LCD pins (parallel, bare 1602) ----
-> (rs, enable, d4, d5, d6, d7)
-- LiquidCrystal lcd(21, 22, 23, 32, 33, 14)
+---- LCD pins (I2C) ----
+LCD_SDA 33
+LCD_SCL 32
 
 ---- RGB LED pins ----
 - LED_G 27
@@ -42,10 +42,10 @@ https://espressif.github.io/arduino-esp32/package_esp32_index.json
 /// LIST OF USER VARIABLES (CAN'T CHANGE IN OPERATION, ONLY WHEN UPLOADING :p)
 ///
 
-- const ThresholdMode THRESHOLD_MODE = MODE_WEIGHT_ONLY; // (MODE_WEIGHT_ONLY, MODE_FOLLOW_DISPLAY, MODE_QTY_ONLY)
+- const ThresholdMode THRESHOLD_MODE // enum (MODE_WEIGHT_ONLY, MODE_FOLLOW_DISPLAY, MODE_QTY_ONLY)
   
-- float qtyThresholdRstk = 15; // Threshold variables like this is the one determining whether something will be RSTK, LOW, or OK.
-- float qtyThresholdLow = 40;
-- float gramThresholdRstk = 500;
-- float gramThresholdLow = 1500;
+- float qtyThresholdRstk // Threshold variables like this is the one determining whether something will be RSTK, LOW, or OK.
+- float qtyThresholdLow
+- float gramThresholdRstk
+- float gramThresholdLow
 
