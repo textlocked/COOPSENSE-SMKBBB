@@ -7,12 +7,11 @@ Additional boards manager URLs
 https://espressif.github.io/arduino-esp32/package_esp32_index.json
 
 ///
-/// LIBRARIES (asterisk means most likely built-in)
+/// THIRD PARTY LIBRARIES 
 ///
 - HX711 by Rob Tillaart
 - LiquidCrystal I2C by Frank de Brabander
-- Preferences*
-- Wire*
+
 ///
 /// LIST OF ASSIGNED PINS
 ///
