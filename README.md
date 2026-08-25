@@ -37,15 +37,3 @@ LCD_SCL 32
 - SILENCE_BTN 16
 - REWEIGH_BTN 35
 
-
-///
-/// LIST OF USER VARIABLES (CAN'T CHANGE IN OPERATION, ONLY WHEN UPLOADING :p)
-///
-
-- const ThresholdMode THRESHOLD_MODE // enum (MODE_WEIGHT_ONLY, MODE_FOLLOW_DISPLAY, MODE_QTY_ONLY)
-  
-- float qtyThresholdRstk // Threshold variables like this is the one determining whether something will be RSTK, LOW, or OK.
-- float qtyThresholdLow
-- float gramThresholdRstk
-- float gramThresholdLow
-
