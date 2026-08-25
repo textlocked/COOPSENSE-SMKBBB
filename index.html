@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoopSense</title>
+<style>
+  :root {
+    --bg: #14171a;
+    --panel: #1c2024;
+    --panel-2: #23282d;
+    --line: #2d3338;
+    --text: #e7ebee;
+    --sub: #8b949c;
+    --rstk: #e85d5d;
+    --low: #e8b95d;
+    --ok: #5de89b;
+    --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    --sans: 'Inter', -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    padding: 32px 20px 60px;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  header h1 {
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sub);
+    font-weight: 600;
+    margin: 0;
+  }
+  header .conn {
+    font-family: var(--mono);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--sub);
+    transition: background 0.3s;
+  }
+  .dot.online { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+  .dot.offline { background: var(--rstk); }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 14px;
+  }
+
+  .status-band {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nickname-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .nickname {
+    font-size: 20px;
+    font-weight: 600;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: var(--sans);
+    padding: 2px 4px;
+    border-radius: 6px;
+    max-width: 220px;
+  }
+  .nickname:focus {
+    outline: none;
+    background: var(--panel-2);
+  }
+  .edit-hint {
+    font-size: 11px;
+    color: var(--sub);
+    font-family: var(--mono);
+  }
+  .mac {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--sub);
+  }
+
+  .badge {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 100px;
+    letter-spacing: 0.03em;
+  }
+  .badge.RSTK { background: rgba(232,93,93,0.15); color: var(--rstk); }
+  .badge.LOW  { background: rgba(232,185,93,0.15); color: var(--low); }
+  .badge.OK   { background: rgba(93,232,155,0.15); color: var(--ok); }
+  .badge.UNKNOWN { background: rgba(139,148,156,0.15); color: var(--sub); }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .metric {
+    background: var(--panel-2);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .metric .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sub);
+    margin-bottom: 6px;
+  }
+  .metric .value {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .metric .value .unit {
+    font-size: 13px;
+    color: var(--sub);
+    font-weight: 400;
+    margin-left: 2px;
+  }
+
+  .foot-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--sub);
+    font-family: var(--mono);
+  }
+  .mute-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 100px;
+    background: var(--panel-2);
+  }
+
+  .config-card {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .config-card input {
+    flex: 1;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 9px 12px;
+    border-radius: 8px;
+  }
+  .config-card input:focus { outline: none; border-color: var(--sub); }
+  .config-card button {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .config-card button:hover { opacity: 0.85; }
+
+  .offline-note {
+    font-size: 13px;
+    color: var(--sub);
+    text-align: center;
+    padding: 8px 0 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dot { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>CoopSense</h1>
+    <div class="conn">
+      <span class="dot" id="connDot"></span>
+      <span id="connLabel">connecting</span>
+    </div>
+  </header>
+
+  <div class="card config-card">
+    <input id="deviceIp" type="text" placeholder="Tray IP e.g. 192.168.1.42" value="">
+    <button onclick="saveIp()">Connect</button>
+  </div>
+
+  <div class="card">
+    <div class="status-band">
+      <div>
+        <div class="nickname-row">
+          <input class="nickname" id="nicknameInput" value="Unnamed Tray" spellcheck="false">
+          <span class="edit-hint">enter ↵</span>
+        </div>
+        <div class="mac" id="macLabel">—</div>
+      </div>
+      <div class="badge UNKNOWN" id="statusBadge">—</div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="label">Total Weight</div>
+        <div class="value" id="totalWeight">—<span class="unit">g</span></div>
+      </div>
+      <div class="metric">
+        <div class="label">Quantity</div>
+        <div class="value" id="quantity">—<span class="unit">items</span></div>
+      </div>
+      <div class="metric">
+        <div class="label">Unit Weight</div>
+        <div class="value" id="unitWeight">—<span class="unit">g</span></div>
+      </div>
+      <div class="metric">
+        <div class="label">Uptime</div>
+        <div class="value" id="uptime">—</div>
+      </div>
+    </div>
+
+    <div class="foot-row">
+      <span id="lastSeen">Last seen: never</span>
+      <span class="mute-pill" id="mutePill">—</span>
+    </div>
+  </div>
+
+  <div class="offline-note" id="offlineNote" style="display:none;">
+    Can't reach this tray. Showing the last known reading.
+  </div>
+
+</div>
+
+<script>
+let currentIp = localStorage.getItem('coopsense_ip') || '';
+let pollTimer = null;
+let lastGoodData = null;
+let nicknameDirty = false;
+
+document.getElementById('deviceIp').value = currentIp;
+
+function saveIp() {
+  currentIp = document.getElementById('deviceIp').value.trim();
+  localStorage.setItem('coopsense_ip', currentIp);
+  restartPolling();
+}
+
+function setConn(online) {
+  const dot = document.getElementById('connDot');
+  const label = document.getElementById('connLabel');
+  const note = document.getElementById('offlineNote');
+  dot.className = 'dot ' + (online ? 'online' : 'offline');
+  label.textContent = online ? 'online' : 'offline';
+  note.style.display = online ? 'none' : 'block';
+}
+
+function render(data) {
+  document.getElementById('macLabel').textContent = data.mac || '—';
+
+  if (!nicknameDirty) {
+    document.getElementById('nicknameInput').value = data.nickname || 'Unnamed Tray';
+  }
+
+  const badge = document.getElementById('statusBadge');
+  badge.textContent = data.status || 'UNKNOWN';
+  badge.className = 'badge ' + (data.status || 'UNKNOWN');
+
+  document.getElementById('totalWeight').innerHTML =
+    (typeof data.totalWeight === 'number' ? data.totalWeight.toFixed(1) : '—') + '<span class="unit">g</span>';
+
+  document.getElementById('unitWeight').innerHTML =
+    (data.hasItemWeight ? data.unitWeight.toFixed(1) : '—') + '<span class="unit">g</span>';
+	
+  document.getElementById('quantity').innerHTML =
+    (data.hasItemWeight ? data.quantity.toFixed(0) : '—') + '<span class="unit"> items</span>';
+
+  const upSec = Math.floor((data.uptimeMs || 0) / 1000);
+  const h = Math.floor(upSec / 3600);
+  const m = Math.floor((upSec % 3600) / 60);
+  document.getElementById('uptime').textContent = h + 'h ' + m + 'm';
+
+  const mutePill = document.getElementById('mutePill');
+  mutePill.textContent = data.silenceState === 'MUTED' ? '🔇 muted' : '🔊 unmuted';
+
+  document.getElementById('lastSeen').textContent = 'Last seen: ' + new Date().toLocaleTimeString();
+}
+
+async function poll() {
+  if (!currentIp) {
+    setConn(false);
+    return;
+  }
+  try {
+    const res = await fetch('http://' + currentIp + '/status', { signal: AbortSignal.timeout(3000) });
+    if (!res.ok) throw new Error('bad status');
+    const data = await res.json();
+    lastGoodData = data;
+    setConn(true);
+    render(data);
+  } catch (e) {
+    setConn(false);
+    if (lastGoodData) render(lastGoodData);
+  }
+}
+
+async function pushNickname(value) {
+  if (!currentIp || !value) return;
+  try {
+    await fetch('http://' + currentIp + '/nickname', {
+      method: 'POST',
+      body: value,
+      signal: AbortSignal.timeout(3000)
+    });
+  } catch (e) {
+    // silently retried on next poll cycle regardless
+  }
+  nicknameDirty = false;
+}
+
+document.getElementById('nicknameInput').addEventListener('input', () => {
+  nicknameDirty = true;
+});
+document.getElementById('nicknameInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.target.blur();
+    pushNickname(e.target.value.trim());
+  }
+});
+
+function restartPolling() {
+  if (pollTimer) clearInterval(pollTimer);
+  poll();
+  pollTimer = setInterval(poll, 2000);
+}
+
+restartPolling();
+</script>
+
+</body>
+</html>
