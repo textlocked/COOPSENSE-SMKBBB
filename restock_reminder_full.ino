@@ -2,6 +2,8 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <Preferences.h>
+#include <WiFi.h>
+#include <WebServer.h>
 
 // ---- HX711 pins ----
 #define HX711_DT   18
@@ -161,6 +163,15 @@ float lastGrams = 0.0;
 unsigned long lastLcdUpdateTime = 0;
 const unsigned long LCD_REFRESH_INTERVAL = 500; // ms — adjust freely
 
+// ------ WEBSERVER ---------
+
+WebServer server(80);
+
+const char* WIFI_SSID = "0405@celcomdigifibre";
+const char* WIFI_PASSWORD = "Ybeezainal@84";
+
+unsigned long deviceBootTime = 0; // for a simple uptime/last-seen reference
+
 
 // ============================================================
 // SETUP
@@ -253,6 +264,8 @@ void setup() {
 
   delay(1500);
   lcd.clear();
+
+  setupWiFiAndServer();
 }
 
 
@@ -261,7 +274,7 @@ void setup() {
 // ============================================================
 
 void loop() {
-
+  server.handleClient();
   handleTareButton();
   handleSilenceButton();
   handleReweighButton();
@@ -323,14 +336,17 @@ StockState computeEffectiveState(float grams) {
   return GOOD_STOCK;
 }
 
+
+
 // Shared by the main loop AND the display-toggle button, so both
 // paths apply LED/buzzer consistently.
 void applyStateIfChanged(float grams) {
   StockState newState = computeEffectiveState(grams);
-
   if (newState != currentState) {
     currentState = newState;
+    
     updateLED(currentState);
+    saveStockStateToPrefs(currentState);
 
     if (silenceState == UNMUTED) {
       triggerBuzzer(currentState);
@@ -338,7 +354,9 @@ void applyStateIfChanged(float grams) {
   }
 }
 
-
+void saveStockStateToPrefs(StockState state) {
+  prefs.putInt("stockState", (int)state);
+}
 // ============================================================
 // TARE BUTTON
 // ============================================================
@@ -1075,4 +1093,116 @@ void setColor(bool red, bool yellow, bool green) {
   digitalWrite(LED_R, red ? HIGH : LOW);
   digitalWrite(LED_G, green ? HIGH : LOW);
   digitalWrite(LED_B, LOW);
+}
+
+
+//  WEBSERVER
+
+void setupWiFiAndServer() {
+
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  lcd.setCursor(0, 0);
+  lcd.print("Connecting WiFi ");
+
+  unsigned long wifiStart = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - wifiStart < 15000) {
+    delay(300);
+    Serial.print(".");
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println();
+    Serial.print("Connected. IP: ");
+    Serial.println(WiFi.localIP());
+
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("WiFi connected  ");
+    lcd.setCursor(0, 1);
+    lcd.print(WiFi.localIP().toString());
+    delay(1500);
+  } else {
+    Serial.println();
+    Serial.println("WiFi failed - continuing offline.");
+
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("WiFi failed     ");
+    lcd.setCursor(0, 1);
+    lcd.print("Running offline ");
+    delay(1500);
+  }
+
+  // ---- Routes ----
+  server.on("/status", HTTP_GET, handleStatusRequest);
+  server.on("/nickname", HTTP_POST, handleNicknameUpdate);
+  server.onNotFound([]() {
+    server.send(404, "text/plain", "Not found");
+  });
+  server.enableCORS(true);
+  server.begin();
+  deviceBootTime = millis();
+  
+}
+
+void handleStatusRequest() {
+
+  String stateStr;
+  switch (currentState) {
+    case RESTOCK:   stateStr = "RSTK"; break;
+    case LOW_STOCK: stateStr = "LOW";  break;
+    case GOOD_STOCK: stateStr = "OK";  break;
+    default:        stateStr = "UNKNOWN"; break;
+  }
+
+  float quantity = hasItemWeight ? (lastGrams / currentItemWeight) : 0;
+  if (quantity < 0) quantity = 0;
+
+  String json = "{";
+  json += "\"nickname\":\"" + getDeviceNickname() + "\",";
+  json += "\"mac\":\"" + getDeviceId() + "\",";
+  json += "\"totalWeight\":" + String(lastGrams, 1) + ",";
+  json += "\"unitWeight\":" + String(currentItemWeight, 1) + ",";
+  json += "\"quantity\":" + String(quantity, 1) + ",";
+  json += "\"status\":\"" + stateStr + "\",";
+  json += "\"hasItemWeight\":" + String(hasItemWeight ? "true" : "false") + ",";
+  json += "\"silenceState\":\"" + String(silenceState == MUTED ? "MUTED" : "UNMUTED") + "\",";
+  json += "\"uptimeMs\":" + String(millis() - deviceBootTime);
+  json += "}";
+
+  server.send(200, "application/json", json);
+}
+
+void handleNicknameUpdate() {
+
+  if (!server.hasArg("plain")) {
+    server.send(400, "text/plain", "Missing body");
+    return;
+  }
+
+  String body = server.arg("plain"); // expects raw string, e.g. "Snack Tray A"
+
+  if (body.length() == 0 || body.length() > 32) {
+    server.send(400, "text/plain", "Invalid nickname length");
+    return;
+  }
+
+  prefs.putString("nickname", body);
+
+  Serial.print("Nickname updated to: ");
+  Serial.println(body);
+
+  server.send(200, "text/plain", "OK");
+}
+
+String getDeviceId() {
+  return WiFi.macAddress();
+}
+
+String getDeviceNickname() {
+  if (prefs.isKey("nickname")) {
+    return prefs.getString("nickname", "Unnamed Tray");
+  }
+  return "Unnamed Tray";
 }
