@@ -38,6 +38,15 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 // ---- Tunables ----
 //
 
+// ------ WEBSERVER ---------
+
+WebServer server(80);
+
+const char* WIFI_SSID = "WIFI_SSID_HERE";
+const char* WIFI_PASSWORD = "WIFI_PASSWORD_HERE";
+
+unsigned long deviceBootTime = 0; // for a simple uptime/last-seen reference
+
 // ---- Threshold mode (compile-time only, not runtime-switchable) ----
 // 0 = always use TOTAL WEIGHT thresholds
 // 1 = follow whatever displayState currently shows
@@ -72,7 +81,7 @@ const float PCT_LOW_CLEAR     = 45.0;
 const int MAX_PROFILES = 6; // adjust to taste; stored in Preferences
 
 // ---- Calibration ----
-float calibration_factor = 367.20;
+float calibration_factor = 193.875;
 
 HX711 scale;
 Preferences prefs;
@@ -226,15 +235,6 @@ float lastGrams = 0.0;
 // ---- LCD refresh timing (independent of weight read timing) ----
 unsigned long lastLcdUpdateTime = 0;
 const unsigned long LCD_REFRESH_INTERVAL = 500; // ms — adjust freely
-
-// ------ WEBSERVER ---------
-
-WebServer server(80);
-
-const char* WIFI_SSID = "0405@celcomdigifibre";
-const char* WIFI_PASSWORD = "Ybeezainal@84";
-
-unsigned long deviceBootTime = 0; // for a simple uptime/last-seen reference
 
 
 // ============================================================
