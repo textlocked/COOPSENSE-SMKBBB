@@ -167,8 +167,8 @@ const unsigned long LCD_REFRESH_INTERVAL = 500; // ms — adjust freely
 
 WebServer server(80);
 
-const char* WIFI_SSID = "0405@celcomdigifibre";
-const char* WIFI_PASSWORD = "Ybeezainal@84";
+const char* WIFI_SSID = "WIFI_SSID_HERE";
+const char* WIFI_PASSWORD = "WIFI_PASSWORD_HERE";
 
 unsigned long deviceBootTime = 0; // for a simple uptime/last-seen reference
 
