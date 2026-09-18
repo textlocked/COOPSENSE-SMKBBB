@@ -2,7 +2,7 @@
 
 An ESP32-based smart tray inventory tracker. A single load cell reads the weight of whatever's sitting on the tray, and the firmware figures out how many items are left, whether it's time to restock, and lets you check status over WiFi. No manual "fill it up to 100%" calibration step required.
 
--# This is a Arduino IDE based project, not PlatformIO IDE. You may use the default board upload settings.
+- This is a Arduino IDE based project, not PlatformIO IDE. You may use the default board upload settings.
 
 ## Why did I make this
 
